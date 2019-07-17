@@ -20,6 +20,8 @@ class Gviz {
 
   final _items = <_Item>[];
 
+  String _graphType = 'digraph';
+
   Gviz(
       {String name,
       Map<String, String> nodeProperties,
@@ -57,6 +59,16 @@ class Gviz {
     _items.add(const _Blank());
   }
 
+  void addSubgraph(Gviz subGraph) {
+    if(subGraph._name == _name) {
+      throw ArgumentError.value('name', 'Subgraph name cannot be same as parent graph name: $_name');
+    }
+    if(_keywords.contains(subGraph._name.toLowerCase())) {
+      throw ArgumentError.value('name', 'Cannot be one of ${_keywords}');
+    }
+    _items.add(_Subgraph(subGraph));
+  }
+
   void write(StringSink sink) {
     String _escape(String input) {
       if (_validName.hasMatch(input) &&
@@ -86,7 +98,7 @@ class Gviz {
       }
     }
 
-    sink.writeln('digraph $_name {');
+    sink.writeln('$_graphType $_name {');
     _writeGlobalProperties('graph', _graphProperties);
     _writeGlobalProperties('node', _nodeProperties);
     _writeGlobalProperties('edge', _edgeProperties);
@@ -105,6 +117,10 @@ class Gviz {
       sink.writeln(';');
     }
 
+    void _writeSubgraph(_Subgraph subGraph) {
+      sink.writeln(subGraph.graph.toString());
+    }
+
     for (var item in _items) {
       if (item is _Edge) {
         _writeEdge(item);
@@ -112,7 +128,10 @@ class Gviz {
         _writeNode(item);
       } else if (item is _Blank) {
         sink.writeln();
-      } else {
+      } else if (item is _Subgraph) {
+        _writeSubgraph(item);
+      } 
+      else {
         throw StateError('Unsupported - ${item.runtimeType} - $item');
       }
     }
@@ -144,6 +163,15 @@ class _Edge implements _Item {
 
   _Edge(this.from, this.to, Map<String, String> properties)
       : properties = properties ?? const {};
+}
+
+class _Subgraph implements _Item {
+
+  final Gviz graph;
+
+  _Subgraph(this.graph) {
+    graph._graphType = 'subgraph';
+  }
 }
 
 class _Blank implements _Item {

@@ -32,5 +32,19 @@ void main() {
     graph.addEdge(from, to);
   }
 
+  Gviz subGraph = Gviz(name: 'SG');
+  subGraph
+    ..addNode('A')
+    ..addNode('B')
+    ..addNode('C');
+
+  subGraph
+    ..addEdge('A', 'B')
+    ..addEdge('B', 'C')
+    ..addEdge('C', 'A');
+
+  graph.addSubgraph(subGraph);
+  graph.addEdge('1', 'A');
+ 
   print(graph);
 }
